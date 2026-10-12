@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote
+      name="github"
+      fetch="https://github.com/" />
+
+  <project
+      name="Motorola-Parrot/android_device_motorola_cuscoi"
+      path="device/motorola/cuscoi"
+      remote="github"
+      revision="f22153e2e385dfac174d7b5075b05370f2b72302" />
+
+  <project
+      name="Motorola-Parrot/android_device_motorola_sm7435-common"
+      path="device/motorola/sm7435-common"
+      remote="github"
+      revision="586ae59d7246f69f30cd7e298e3f85b53c3648c8" />
+
+  <project
+      name="Motorola-Parrot/android_kernel_motorola_sm7435"
+      path="kernel/motorola/sm7435"
+      remote="github"
+      revision="c89baff583e9d1f1d0167d6b51479d735c1665c2" />
+
+  <project
+      name="Motorola-Parrot/proprietary_vendor_motorola_cuscoi"
+      path="vendor/motorola/cuscoi"
+      remote="github"
+      revision="32010f3e0484476d985287522e0c9797910c8d42" />
+</manifest>
