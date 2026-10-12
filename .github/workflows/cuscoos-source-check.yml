@@ -1,0 +1,88 @@
+name: CuscoOS Source Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-device-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout CuscoOS
+        uses: actions/checkout@v4
+
+      - name: Verify upstream branches
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          check_branch() {
+            local repo="$1"
+            local branch="$2"
+
+            echo "Checking $repo ($branch)"
+            git ls-remote --exit-code --heads \
+              "https://github.com/${repo}.git" \
+              "refs/heads/${branch}" >/dev/null
+          }
+
+          check_branch \
+            Motorola-Parrot/android_device_motorola_cuscoi \
+            lineage-22.2
+
+          check_branch \
+            Motorola-Parrot/android_device_motorola_sm7435-common \
+            lineage-22.2
+
+          check_branch \
+            Motorola-Parrot/android_kernel_motorola_sm7435 \
+            lineage-22.2
+
+          check_branch \
+            Motorola-Parrot/proprietary_vendor_motorola_cuscoi \
+            lineage-22.2
+
+          check_branch LineageOS/android lineage-22.2
+
+      - name: Verify device product configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE="https://raw.githubusercontent.com/Motorola-Parrot/android_device_motorola_cuscoi/lineage-22.2"
+
+          curl -fsSL "$BASE/README.md" \
+            -o /tmp/device-readme
+
+          curl -fsSL "$BASE/lineage_cuscoi.mk" \
+            -o /tmp/device-product
+
+          curl -fsSL "$BASE/BoardConfig.mk" \
+            -o /tmp/board-config
+
+          grep -qi cuscoi /tmp/device-readme
+
+          grep -Eq \
+            'PRODUCT_DEVICE[[:space:]]*:=[[:space:]]*cuscoi' \
+            /tmp/device-product
+
+          grep -Eq \
+            'PRODUCT_NAME[[:space:]]*:=[[:space:]]*lineage_cuscoi' \
+            /tmp/device-product
+
+          grep -q 'sm7435-common' /tmp/board-config
+
+          echo "Device source checks passed."
+          echo "No Android ROM was compiled or tested."
