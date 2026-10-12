@@ -1,0 +1,39 @@
+name: CuscoOS Runner Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Inspect runner resources
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== CPU ==="
+          nproc
+          lscpu | head -20
+
+          echo "=== Memory ==="
+          free -h
+          grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+
+          echo "=== Disk ==="
+          df -h /
+          df -h "$GITHUB_WORKSPACE"
+
+          echo "=== Filesystem ==="
+          lsblk || true
+
+          echo "=== Operating system ==="
+          cat /etc/os-release
+
+          echo "Diagnostic complete."
+          echo "No Android source downloaded; no ROM built."
