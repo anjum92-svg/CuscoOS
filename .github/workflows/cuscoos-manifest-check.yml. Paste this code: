@@ -1,0 +1,61 @@
+name: CuscoOS Manifest Check
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate XML
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse("manifest/cuscoos.xml").getroot()
+          projects = root.findall("project")
+
+          assert len(projects) == 4, "Expected four projects"
+
+          for project in projects:
+              assert project.get("name")
+              assert project.get("path")
+              assert project.get("revision")
+
+          print("Manifest XML is valid.")
+          print(f"Found {len(projects)} pinned projects.")
+          PY
+
+      - name: Verify pinned commits
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY' > /tmp/projects.tsv
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse("manifest/cuscoos.xml").getroot()
+          for p in root.findall("project"):
+              print(p.get("name"), p.get("revision"), sep="\t")
+          PY
+
+          while IFS=$'\t' read -r repo sha; do
+            echo "Checking $repo at $sha"
+
+            curl -fsSL \
+              "https://api.github.com/repos/${repo}/commits/${sha}" \
+              -o /tmp/commit.json
+
+            python3 -c \
+              'import json; d=json.load(open("/tmp/commit.json")); assert d["sha"]'
+          done < /tmp/projects.tsv
+
+          echo "All pinned commits were found."
