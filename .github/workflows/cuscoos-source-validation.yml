@@ -34,9 +34,9 @@ jobs:
           print("Manifest XML is valid.")
           print(f"Projects found: {len(projects)}")
 
-          if len(projects) != 4:
+          if len(projects) != 9:
               raise SystemExit(
-                  f"Expected 4 source projects; found {len(projects)}"
+                  f"Expected 9 source projects; found {len(projects)}"
               )
 
           for project in projects:
