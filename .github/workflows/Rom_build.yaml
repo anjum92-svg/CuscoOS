@@ -1,0 +1,72 @@
+
+name: CuscoOS ROM Build Attempt
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout CuscoOS configuration
+        uses: actions/checkout@v4
+        with:
+          ref: Migration/lineage-23.2
+
+      - name: Check runner resources
+        run: |
+          nproc
+          free -h
+          df -h /
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison \
+            build-essential zip curl zlib1g-dev libc6-dev-i386 \
+            libncurses-dev x11proto-core-dev libx11-dev \
+            lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc \
+            unzip fontconfig python3 python-is-python3 rsync bc \
+            ccache lz4 libssl-dev libelf-dev
+
+          sudo curl -fsSL \
+            https://storage.googleapis.com/git-repo-downloads/repo \
+            -o /usr/local/bin/repo
+          sudo chmod a+x /usr/local/bin/repo
+
+      - name: Initialize Android source
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/android"
+          cd "$GITHUB_WORKSPACE/android"
+
+          repo init \
+            -u https://github.com/LineageOS/android.git \
+            -b lineage-23.2 --git-lfs
+
+          mkdir -p .repo/local_manifests
+          cp "$GITHUB_WORKSPACE/manifest/cuscoos.xml" \
+            .repo/local_manifests/cuscoos.xml
+
+      - name: Sync source
+        run: |
+          cd "$GITHUB_WORKSPACE/android"
+          repo sync -c --force-sync \
+            --no-clone-bundle --no-tags -j2
+
+      - name: Configure build
+        run: |
+          cd "$GITHUB_WORKSPACE/android"
+          source build/envsetup.sh
+          lunch lineage_cuscoi-bp2a-userdebug
+
+      - name: Compile ROM
+        run: |
+          cd "$GITHUB_WORKSPACE/android"
+          source build/envsetup.sh
+          lunch lineage_cuscoi-bp2a-userdebug
+          m bacon -j2
