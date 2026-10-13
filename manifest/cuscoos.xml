@@ -5,13 +5,6 @@
     <!-- Motorola Edge 50 Fusion (cuscoi) -->
     <!-- LineageOS 23.2 source migration -->
 
-    <project
-        name="LineageOS/android"
-        path="."
-        remote="github"
-        revision="lineage-23.2"
-        clone-depth="1" />
-
     <!-- Device trees -->
     <project
         name="moto-sm7435-dev/android_device_motorola_cuscoi"
